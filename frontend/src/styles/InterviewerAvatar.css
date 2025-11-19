@@ -1,0 +1,90 @@
+.interviewer-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.avatar-card {
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-container {
+  transition: all 0.3s ease;
+  padding: 20px;
+}
+
+.avatar-neutral {
+  transform: scale(1);
+}
+
+.avatar-listening {
+  transform: scale(1.05);
+  animation: pulse 2s infinite;
+}
+
+.avatar-speaking {
+  transform: scale(1.1);
+  animation: talk 0.5s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes talk {
+  0% {
+    transform: scale(1.1) rotate(-1deg);
+  }
+  100% {
+    transform: scale(1.1) rotate(1deg);
+  }
+}
+
+.question-display {
+  background-color: #f0f2f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #1890ff;
+}
+
+.question-display h3 {
+  margin: 0 0 10px 0;
+  color: #1890ff;
+}
+
+.question-text {
+  margin: 0;
+  color: #333;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.read-question-btn {
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .avatar-card {
+    max-width: 100%;
+  }
+
+  .question-display {
+    padding: 15px;
+  }
+
+  .question-text {
+    font-size: 14px;
+  }
+}

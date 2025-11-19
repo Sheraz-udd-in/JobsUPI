@@ -1,0 +1,19 @@
+.question-form-card {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-form-card :global(.ant-form-item) {
+  margin-bottom: 20px;
+}
+
+.question-form-card :global(.ant-btn) {
+  height: 40px;
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .question-form-card {
+    margin-bottom: 15px;
+  }
+}

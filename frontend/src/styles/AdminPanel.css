@@ -1,0 +1,21 @@
+.admin-panel {
+  padding: 20px;
+}
+
+.questions-table-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.questions-table-card :global(.ant-table) {
+  font-size: 14px;
+}
+
+.questions-table-card :global(.ant-table-small) {
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .admin-panel {
+    padding: 10px;
+  }
+}

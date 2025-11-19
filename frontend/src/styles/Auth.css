@@ -11,17 +11,37 @@
   max-width: 450px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   border-radius: 8px;
+  overflow: hidden;
 }
 
 .auth-card :global(.ant-card-head) {
   background-color: #1890ff;
   border-bottom: none;
+  padding: 16px !important;
 }
 
 .auth-card :global(.ant-card-head-title) {
   color: white;
   font-size: 20px;
   font-weight: bold;
+}
+
+.auth-card :global(.ant-form-item-label) {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.auth-card :global(.ant-form-item-label > label) {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.auth-card :global(.ant-form-item-label .ant-form-item-required:before) {
+  content: '*';
+  color: #ff4d4f;
+  margin-right: 4px;
 }
 
 .auth-card :global(.ant-form-item) {

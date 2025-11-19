@@ -11,10 +11,10 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Public routes
+// Public routes - Category must come BEFORE :id to avoid route conflicts
+router.get('/category/:category', getQuestionsByCategory);
 router.get('/', getAllQuestions);
 router.get('/:id', getQuestionById);
-router.get('/category/:category', getQuestionsByCategory);
 
 // Admin routes (protected)
 router.post('/', protect, createQuestion);

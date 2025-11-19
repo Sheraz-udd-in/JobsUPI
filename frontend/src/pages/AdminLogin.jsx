@@ -38,7 +38,7 @@ const AdminLogin = () => {
     <div className="auth-container">
       <Row justify="center" align="middle" style={{ minHeight: '100vh' }}>
         <Col xs={24} sm={20} md={12} lg={8}>
-          <Card className="auth-card" title="Admin Login">
+          <Card className="auth-card" title="Admin Login" style={{ width: '100%' }}>
             <Form
               form={form}
               layout="vertical"

@@ -7,7 +7,7 @@ Handles speech recognition, text-to-speech, and interview conversations
 import flask
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
-from gradio_client import Client, handle_file
+from gradio_client import Client
 from gtts import gTTS
 import os
 import datetime
@@ -244,7 +244,7 @@ def start_interview():
         # Call Hugging Face API
         logger.info("Calling Hugging Face AI model...")
         result = client.predict(
-            resume=handle_file(temp_resume_path),
+            resume=temp_resume_path,
             job_desc=job_description,
             api_name="/gradio_start_interview"
         )

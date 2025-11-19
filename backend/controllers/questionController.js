@@ -1,56 +1,41 @@
-const Question = require('../models/Question');
+const { supabase } = require('../config/supabase');
 
 // Mock questions for demo purposes
 const MOCK_QUESTIONS = [
   {
-    _id: '1',
+    id: '1',
     title: 'Tell us about yourself',
     description: 'Please introduce yourself and share your background.',
     category: 'HR',
     difficulty: 'Easy',
-    expectedKeywords: ['experience', 'skills', 'background', 'goals'],
-    evaluationCriteria: 'Clarity of communication, relevant experience, career vision',
-    isActive: true,
   },
   {
-    _id: '2',
+    id: '2',
     title: 'What are your strengths?',
     description: 'Describe your key strengths and how they make you a good fit.',
     category: 'Behavioral',
     difficulty: 'Medium',
-    expectedKeywords: ['skills', 'achievements', 'teamwork', 'leadership'],
-    evaluationCriteria: 'Relevance to job, confidence, specific examples',
-    isActive: true,
   },
   {
-    _id: '3',
+    id: '3',
     title: 'Explain REST API concepts',
     description: 'Explain the key concepts of REST API design and implementation.',
     category: 'Technical',
     difficulty: 'Hard',
-    expectedKeywords: ['HTTP', 'stateless', 'resources', 'endpoints', 'JSON'],
-    evaluationCriteria: 'Technical accuracy, understanding of principles, real-world examples',
-    isActive: true,
   },
   {
-    _id: '4',
+    id: '4',
     title: 'How do you handle pressure?',
     description: 'Describe a situation where you handled pressure effectively.',
     category: 'Behavioral',
     difficulty: 'Medium',
-    expectedKeywords: ['calm', 'organized', 'prioritize', 'solution', 'team'],
-    evaluationCriteria: 'Stress management, problem-solving, positive outcome',
-    isActive: true,
   },
   {
-    _id: '5',
+    id: '5',
     title: 'What is your experience with databases?',
     description: 'Tell us about your experience with databases and SQL.',
     category: 'Technical',
     difficulty: 'Medium',
-    expectedKeywords: ['SQL', 'MongoDB', 'queries', 'optimization', 'transactions'],
-    evaluationCriteria: 'Technical knowledge, practical experience, optimization awareness',
-    isActive: true,
   },
 ];
 
@@ -62,36 +47,39 @@ exports.getAllQuestions = async (req, res) => {
     const { category } = req.query;
 
     try {
-      // Try to fetch from database
-      const filter = { isActive: true };
+      // Try Supabase
+      let query = supabase.from('questions').select('*');
+      
       if (category) {
-        filter.category = category;
+        query = query.eq('category', category);
       }
 
-      const questions = await Question.find(filter).sort({ createdAt: -1 });
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      return res.status(200).json({
+        success: true,
+        count: data ? data.length : 0,
+        data: data || [],
+      });
+    } catch (dbError) {
+      console.log('⚠️  Supabase query failed, using mock questions');
+      
+      // Filter mock data by category if provided
+      let questions = MOCK_QUESTIONS;
+      if (category) {
+        questions = questions.filter(q => q.category === category);
+      }
+
       return res.status(200).json({
         success: true,
         count: questions.length,
         data: questions,
-      });
-    } catch (dbError) {
-      // Fallback to mock data if database is not available
-      console.log('Database unavailable, using mock data:', dbError.message);
-      
-      let mockData = [...MOCK_QUESTIONS];
-      if (category) {
-        mockData = mockData.filter(q => q.category === category);
-      }
-
-      return res.status(200).json({
-        success: true,
-        count: mockData.length,
-        data: mockData,
         mode: 'demo',
       });
     }
   } catch (error) {
-    console.error('Error fetching questions:', error);
     res.status(500).json({
       success: false,
       message: error.message,
@@ -104,42 +92,42 @@ exports.getAllQuestions = async (req, res) => {
 // @access  Public
 exports.getQuestionById = async (req, res) => {
   try {
+    const { id } = req.params;
+
     try {
-      const question = await Question.findById(req.params.id);
-      if (!question) {
-        // Try mock data
-        const mock = MOCK_QUESTIONS.find(q => q._id === req.params.id);
-        if (!mock) {
-          return res.status(404).json({
-            success: false,
-            message: 'Question not found',
-          });
-        }
+      // Try Supabase
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (data) {
         return res.status(200).json({
           success: true,
-          data: mock,
-          mode: 'demo',
+          data,
         });
       }
-      res.status(200).json({
-        success: true,
-        data: question,
-      });
-    } catch (dbError) {
-      // Fallback to mock data
-      const mock = MOCK_QUESTIONS.find(q => q._id === req.params.id);
-      if (!mock) {
-        return res.status(404).json({
-          success: false,
-          message: 'Question not found',
-        });
-      }
-      return res.status(200).json({
-        success: true,
-        data: mock,
-        mode: 'demo',
+    } catch (error) {
+      console.log('⚠️  Supabase query failed, using mock questions');
+    }
+
+    // Try mock data
+    const mock = MOCK_QUESTIONS.find(q => q.id === id);
+    if (!mock) {
+      return res.status(404).json({
+        success: false,
+        message: 'Question not found',
       });
     }
+
+    res.status(200).json({
+      success: true,
+      data: mock,
+      mode: 'demo',
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -153,40 +141,51 @@ exports.getQuestionById = async (req, res) => {
 // @access  Private (Admin)
 exports.createQuestion = async (req, res) => {
   try {
-    const { title, description, category, difficulty, expectedKeywords, evaluationCriteria } = req.body;
+    const { title, description, category, difficulty } = req.body;
+
+    if (!title || !category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide title and category',
+      });
+    }
 
     try {
-      const question = await Question.create({
-        title,
-        description,
-        category,
-        difficulty,
-        expectedKeywords,
-        evaluationCriteria,
-      });
+      const { data, error } = await supabase
+        .from('questions')
+        .insert({
+          title,
+          description,
+          category,
+          difficulty: difficulty || 'Medium',
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
 
       res.status(201).json({
         success: true,
         message: 'Question created successfully',
-        data: question,
+        data,
       });
-    } catch (dbError) {
-      // In demo mode, create mock question
+    } catch (error) {
+      console.log('⚠️  Supabase insert failed, using demo mode');
+      
+      // In demo mode, just acknowledge
       const mockQuestion = {
-        _id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).substr(2, 9),
         title,
         description,
         category,
-        difficulty,
-        expectedKeywords,
-        evaluationCriteria,
-        isActive: true,
+        difficulty: difficulty || 'Medium',
+        created_at: new Date().toISOString(),
       };
-      MOCK_QUESTIONS.push(mockQuestion);
-      
+
       res.status(201).json({
         success: true,
-        message: 'Question created successfully (demo mode)',
+        message: 'Question created (demo mode)',
         data: mockQuestion,
         mode: 'demo',
       });
@@ -204,25 +203,38 @@ exports.createQuestion = async (req, res) => {
 // @access  Private (Admin)
 exports.updateQuestion = async (req, res) => {
   try {
-    let question = await Question.findById(req.params.id);
+    const { id } = req.params;
 
-    if (!question) {
-      return res.status(404).json({
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .update(req.body)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (!data) {
+        return res.status(404).json({
+          success: false,
+          message: 'Question not found',
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Question updated successfully',
+        data,
+      });
+    } catch (error) {
+      console.log('⚠️  Supabase update failed');
+      
+      res.status(404).json({
         success: false,
         message: 'Question not found',
       });
     }
-
-    question = await Question.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Question updated successfully',
-      data: question,
-    });
   } catch (error) {
     res.status(400).json({
       success: false,
@@ -236,20 +248,38 @@ exports.updateQuestion = async (req, res) => {
 // @access  Private (Admin)
 exports.deleteQuestion = async (req, res) => {
   try {
-    const question = await Question.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
 
-    if (!question) {
-      return res.status(404).json({
+    try {
+      const { data, error } = await supabase
+        .from('questions')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (!data) {
+        return res.status(404).json({
+          success: false,
+          message: 'Question not found',
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Question deleted successfully',
+        data: {},
+      });
+    } catch (error) {
+      console.log('⚠️  Supabase delete failed');
+      
+      res.status(404).json({
         success: false,
         message: 'Question not found',
       });
     }
-
-    res.status(200).json({
-      success: true,
-      message: 'Question deleted successfully',
-      data: {},
-    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -267,23 +297,29 @@ exports.getQuestionsByCategory = async (req, res) => {
     const { limit } = req.query;
 
     try {
-      let query = Question.find({ category, isActive: true });
+      let query = supabase
+        .from('questions')
+        .select('*')
+        .eq('category', category);
 
       if (limit) {
         query = query.limit(parseInt(limit));
       }
 
-      const questions = await query;
+      const { data, error } = await query;
+
+      if (error && error.code !== 'PGRST116') throw error;
 
       res.status(200).json({
         success: true,
-        count: questions.length,
-        data: questions,
+        count: data ? data.length : 0,
+        data: data || [],
       });
-    } catch (dbError) {
+    } catch (error) {
+      console.log('⚠️  Supabase query failed, using mock data');
+      
       // Fallback to mock data
-      console.log('Using mock data for category:', category);
-      let mockData = MOCK_QUESTIONS.filter(q => q.category === category && q.isActive);
+      let mockData = MOCK_QUESTIONS.filter(q => q.category === category);
       
       if (limit) {
         mockData = mockData.slice(0, parseInt(limit));

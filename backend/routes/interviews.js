@@ -1,7 +1,7 @@
 const express = require('express');
 const {
   createInterviewSession,
-  getInterviewSession,
+  getInterview,
   submitAnswer,
   completeInterview,
   getAllInterviews,
@@ -13,10 +13,10 @@ const router = express.Router();
 
 // Public routes
 router.post('/', createInterviewSession);
-router.get('/:id', getInterviewSession);
+router.get('/:id/report', getInterviewReport);
+router.get('/:id', getInterview);
 router.put('/:id/answer/:questionIndex', submitAnswer);
 router.put('/:id/complete', completeInterview);
-router.get('/:id/report', getInterviewReport);
 
 // Admin routes
 router.get('/', protect, getAllInterviews);

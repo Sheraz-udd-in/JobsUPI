@@ -2,16 +2,16 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const connectDB = require('./config/database');
+const { connectSupabase } = require('./config/supabase');
 const questionRoutes = require('./routes/questions');
 const interviewRoutes = require('./routes/interviews');
 const authRoutes = require('./routes/auth');
 
 const app = express();
 
-// Connect to database (non-blocking - app will run even if DB fails)
-connectDB().catch((err) => {
-  console.warn('⚠️  Database connection failed, running in demo mode');
+// Connect to Supabase (non-blocking - app will run even if DB fails)
+connectSupabase().catch((err) => {
+  console.warn('⚠️  Supabase connection failed');
 });
 
 // Middleware

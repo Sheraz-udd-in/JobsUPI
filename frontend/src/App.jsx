@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import AdminLogin from './pages/AdminLogin';
 import AdminRegister from './pages/AdminRegister';
 import AdminPanel from './pages/AdminPanel';
+import InterviewSession from './components/InterviewSession';
 import './App.css';
 
 const ProtectedRoute = ({ children, isAuthenticated }) => {
@@ -23,6 +24,7 @@ function App() {
         <Layout.Content className="app-content">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/interview" element={<InterviewSession />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/register" element={<AdminRegister />} />
             <Route

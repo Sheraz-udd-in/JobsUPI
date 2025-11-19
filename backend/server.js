@@ -6,6 +6,7 @@ const { connectSupabase } = require('./config/supabase');
 const questionRoutes = require('./routes/questions');
 const interviewRoutes = require('./routes/interviews');
 const authRoutes = require('./routes/auth');
+const aiInterviewRoutes = require('./routes/interview');
 
 const app = express();
 
@@ -18,6 +19,7 @@ connectSupabase().catch((err) => {
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(require('express-fileupload')());  // File upload middleware for interview files
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -29,6 +31,7 @@ app.use((req, res, next) => {
 app.use('/api/questions', questionRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/interview', aiInterviewRoutes);  // AI Interview routes (NEW)
 
 // Health check
 app.get('/health', (req, res) => {

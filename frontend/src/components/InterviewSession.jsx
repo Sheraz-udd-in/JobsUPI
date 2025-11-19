@@ -59,7 +59,7 @@ const InterviewSession = () => {
     formData.append('job_description', jobDescription);
 
     try {
-      const response = await axios.post('http://localhost:5001/api/start-interview', formData);
+      const response = await axios.post('http://localhost:5000/api/interview/start', formData);
       
       if (response.data.success) {
         setConversation(response.data.conversation);
@@ -150,7 +150,7 @@ const InterviewSession = () => {
     formData.append('conversation_history', conversation);
 
     try {
-      const response = await axios.post('http://localhost:5001/api/process-response', formData);
+      const response = await axios.post('http://localhost:5000/api/interview/process-response', formData);
 
       if (response.data.success) {
         setConversation(response.data.conversation);
@@ -179,7 +179,7 @@ const InterviewSession = () => {
   const endInterview = async () => {
     setLoading(true);
     try {
-      await axios.post('http://localhost:5001/api/end-interview', {
+      await axios.post('http://localhost:5000/api/interview/end', {
         interview_data: {
           id: interviewId,
           conversation,

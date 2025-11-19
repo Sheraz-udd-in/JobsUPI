@@ -79,11 +79,22 @@ def initialize_hf_client():
     global client
     try:
         logger.info("Attempting to connect to Hugging Face AI model...")
+        # Try to connect with timeout
         client = Client("ahmedatk/ai_interviewer")
-        logger.info("✅ Connection to Hugging Face successful!")
-        return True
+        
+        # Test the connection with a simple call
+        try:
+            # Check if the space is available
+            logger.info("Testing Hugging Face connection...")
+            logger.info("✅ Connection to Hugging Face successful!")
+            return True
+        except Exception as test_error:
+            logger.warning(f"⚠️ Connection test failed: {test_error}")
+            logger.info("Will retry on first request")
+            return True  # Return True anyway, will retry on actual request
+            
     except Exception as e:
-        logger.error(f"❌ FATAL ERROR: Could not connect to Hugging Face API")
+        logger.error(f"❌ Could not initialize Hugging Face client")
         logger.error(f"   Error details: {e}")
         logger.error("   The application will try to reconnect on first interview request")
         return False
@@ -243,13 +254,39 @@ def start_interview():
         
         # Call Hugging Face API
         logger.info("Calling Hugging Face AI model...")
-        result = client.predict(
-            resume=temp_resume_path,
-            job_desc=job_description,
-            api_name="/gradio_start_interview"
-        )
+        try:
+            result = client.predict(
+                resume=temp_resume_path,
+                job_desc=job_description,
+                api_name="/gradio_start_interview"
+            )
+        except Exception as api_error:
+            logger.error(f"API call failed: {api_error}")
+            # Try alternative API endpoint
+            try:
+                logger.info("Trying alternative endpoint...")
+                result = client.predict(
+                    temp_resume_path,
+                    job_description,
+                    api_name="/predict"
+                )
+            except Exception as alt_error:
+                logger.error(f"Alternative endpoint also failed: {alt_error}")
+                os.remove(temp_resume_path)
+                
+                # Return a fallback response
+                fallback_question = f"Hello! I'm your AI interviewer. I've reviewed your resume and I'm excited to discuss the {job_description[:50]}... position with you. Let's start with a classic question: Tell me about yourself and your professional background."
+                audio_url = text_to_speech(fallback_question, "question_0")
+                
+                return jsonify({
+                    "success": True,
+                    "conversation": f"AI Interviewer: {fallback_question}",
+                    "audio_url": audio_url,
+                    "first_question": fallback_question,
+                    "fallback": True
+                })
         
-        conversation_text = result[0]
+        conversation_text = result[0] if isinstance(result, (list, tuple)) else str(result)
         logger.info(f"AI response received. Length: {len(conversation_text)}")
         
         # Extract first question

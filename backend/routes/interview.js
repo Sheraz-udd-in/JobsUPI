@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const FormData = require('form-data');
 const router = express.Router();
 
 // AI Service base URL
@@ -16,7 +17,10 @@ router.post('/start', async (req, res) => {
     const formData = new FormData();
     
     if (req.files && req.files.resume) {
-      formData.append('resume', req.files.resume.data, req.files.resume.name);
+      formData.append('resume', req.files.resume.data, {
+        filename: req.files.resume.name,
+        contentType: req.files.resume.mimetype,
+      });
     }
     
     if (req.body.job_description) {
@@ -50,7 +54,10 @@ router.post('/process-response', async (req, res) => {
     const formData = new FormData();
     
     if (req.files && req.files.audio) {
-      formData.append('audio', req.files.audio.data, req.files.audio.name);
+      formData.append('audio', req.files.audio.data, {
+        filename: req.files.audio.name,
+        contentType: req.files.audio.mimetype,
+      });
     }
     
     if (req.body.conversation_history) {
